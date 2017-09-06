@@ -1,69 +1,96 @@
 //this is code for basic hash functions
+#include <stdlib.h>
+#include <string.h>
+#include <iostream>
 using namespace std;
+typedef struct pairr{
+	char* key;
+	int value;
+}pairr;
 typedef struct linknode{
-	lnode* next;
-	char* key;	
+	linknode* next;
+	pairr x;	
 }lnode;
 
-typedef struct linktable{
+typedef struct  linktable{
 	int len;
 	lnode* head;
 }ltable;
 
 typedef struct hashtable{
 	int len;
-	linktable lists[len];
+	linktable lists[20];
 }htable;
 
 //链表插入操作
-void insert(char* key, ltable* list){
+void insert(pairr p, ltable* list){
 	if(list -> head){
-		if(key > list -> head -> key){
-			lnode *temp = list -> head;
-			lnode *prev;
-			while(key > temp -> key && temp -> next){
-				prev = temp;
-				temp = temp -> next;
-			}
-			if(key < temp -> key){
-				lnode* node;
-				node -> key = key;
-				prev -> next = node;
-				node -> next = temp;
-			}
-			else if(key > temp -> key){
-				lnode* node;
-				node -> key = key;
-				temp -> next = node;
-				node -> next = null;
-			}
+		if(p.key <= list -> head -> x.key){
+			lnode* node = (linknode *)malloc(sizeof(linknode));
+			node -> x.key = p.key;
+			node -> x.value = p.value;
+			node -> next = list -> head;
+			list -> head = node;
 		}
 		else{
-			lnode *temp;
-			temp -> key = key;
-			temp -> next = list -> head;
-			list -> head = temp;
+			lnode* temp = list -> head;
+			lnode* node = (linknode *)malloc(sizeof(linknode));
+			while(temp -> next && p.key >= temp -> x.key){
+				temp = temp -> next;
+			}
+			node -> x.key = p.key;
+			node -> x.value = p.value;
+			node -> next = temp -> next;
+			temp -> next = node;
+
 		}
 	}
-	else{
-		lnode* temp;
-		temp -> key = key;
-		temp -> next = null;
-		list -> head = temp;
+	else{   
+		lnode* node = (linknode *)malloc(sizeof(linknode));
+		node -> x.key = p.key;
+		node -> x.value = p.value;
+		node -> next = NULL;
+		list -> head = (linknode *)malloc(sizeof(linknode));
+		list -> head -> x = node -> x;
+		list -> head -> next = NULL;
 	}
-	list -> len ++;
+	return;
+}
+
+//链表查询操作
+int search(char key[], ltable* list){
+	if(list -> head){
+		lnode* node = (linknode *)malloc(sizeof(linknode));
+		node = list -> head;
+		while(node){
+			if(strcmp(node -> x.key, key) == 0)
+				return node -> x.value;
+			node = node -> next;
+		}
+		return -2;
+	}
+	else{
+		return -3;		
+	}
 }
 
 //hash function
-int hash(char* key, int tablelen){
+int hhash(char key[], int tablelen, int len){
 	int nhash = 0;
-	while(key){
-		nhash = (nhash << 5) + nhash + *key++;
+	for(int i = 0; i < len; i++){
+		nhash = (nhash << 5) + nhash + key[i];
 	}
 	return nhash % tablelen;
 }
 
-void Insertkey(int key, hashtable x){
-	int value = hash(key, x -> len);
-	insert(key, x -> lists[value]);
+void Insertkey(pairr p, hashtable* x, int len){
+	int v = hhash(p.key, x -> len, len);
+	insert(p, &(x -> lists[v]));
+	return;
+}
+
+//哈希表查询操作
+int hvalue(char key[], hashtable x, int len){
+	int v = hhash(key, x.len, len);
+	return search(key, &x.lists[v]);
 }
